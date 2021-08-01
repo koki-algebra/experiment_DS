@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lib import polynomial_regression as pr
 
+# 2日目
 # 課題7.9用
 def prob7_9(M, data_size):
     data = np.loadtxt('data/data_{N}.csv'.format(N=data_size), delimiter=',')
@@ -32,7 +33,7 @@ def prob7_9(M, data_size):
     plt.show()
 
 
-# 3日目用
+# 3日目
 # データサイズと次数に対応する訓練誤差とテスト誤差を返す
 def prob_day3_calc_err(data_size, degree):
     data = np.loadtxt('data/data_{N}.csv'.format(N=data_size), delimiter=',')
@@ -84,4 +85,48 @@ def prob7_15(data_size):
     ax.grid()
     
     fig.savefig('img/day3/rms_data{N}.png'.format(N=data_size))
+    plt.show()
+
+def prob7_20():
+    data = np.loadtxt('data/data_20.csv', delimiter=',')
+    # 次数1〜9における交差検証の結果を格納する配列
+    errors = np.array([])
+
+    for i in range(1, 10):
+        errors = np.append(errors, pr.cross_validation(data, 5, i))
+    print(errors)
+
+    fig, ax = plt.subplots()
+
+    ax.scatter(range(1, 10), errors)
+    ax.set_title('5 fold cross-validation')
+    ax.set_xlabel('degree')
+    ax.set_ylabel('test error')
+    ax.grid()
+
+    fig.savefig('img/day4/cv.png')
+    plt.show()
+
+def prob7_21_22():
+    data = np.loadtxt('data/data_20.csv', delimiter=',')
+
+    # モデル選択
+    M = pr.select_best_degree(data)
+
+    # 求めた次数Mを使って多項式回帰
+    X = pr.gen_data_matrix(data[:,0], M)
+    w = pr.polynomial_regression(data, M)
+    y_e = pr.predict(w, X)
+
+    fig, ax = plt.subplots()
+
+    ax.scatter(data[:,0], data[:,1], label='correct answer', s=5)
+    ax.scatter(data[:,0], y_e, label='predicted', s=5)
+    ax.set_title('model select')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.grid()
+    ax.legend()
+
+    fig.savefig('img/day4/model_select.png')
     plt.show()

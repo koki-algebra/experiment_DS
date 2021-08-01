@@ -22,13 +22,28 @@ def polynomial_regression(data, M):
     data_x = data[:, 0]
     # 教師データ
     t = data[:, 1]
-    # 行列Xを作成
+    # データ行列Xを作成
     X = gen_data_matrix(data_x, M)
 
     # 最小二乗法によって係数ベクトルを求める
     w = np.linalg.inv(X.T @ X) @ X.T @ t
 
     return w
+
+
+# 正則化多項式回帰を行う関数
+def normalize_pr(data, M, L):
+    # x座標のデータ
+    data_x = data[:,0]
+    # 教師データ
+    t = data[:, 1]
+    # データ行列Xを作成
+    X = gen_data_matrix(data_x, M)
+
+    # 最小二乗法によって係数ベクトルを求める
+    w = np.linalg.inv(X.T @ X + np.identity(M) * L) @ X.T @ t
+    return w
+
 
 # M次多項式回帰によって得られた係数ベクトルwを使って推定値y_eを返す関数
 def predict(w, X):
@@ -46,3 +61,59 @@ def predict(w, X):
 def calc_rms(y_e, t):
     N = len(t)
     return np.sqrt(np.dot((y_e - t).T, (y_e - t)) / N)
+
+
+# N個の1〜Kの乱数を生成する関数
+def gen_random_nums(N, K):
+    rnds = np.array([])
+    # 1〜Kの全ての数字が出たか
+    is_full_exist = False
+
+    while not is_full_exist:
+        rnds = np.array([])
+        for i in range(N):
+            rnds = np.append(rnds, np.random.randint(1, K + 1))
+
+        # 出ていない数字がないか確認
+        for i in range(1, K + 1):
+            if not i in rnds:
+                is_full_exist = False
+                break
+            else: # 出ていない数字が無い場合ループを抜ける
+                is_full_exist = True
+
+    return rnds
+
+
+# K-Fold Cross Validation
+def cross_validation(data, K, degree):
+    data_size = data.shape[0]
+    rnds = gen_random_nums(data_size, K)
+
+    errors = np.array([])
+    for i in range(1, K + 1):
+        # テストデータ
+        d_test = data[rnds == i]
+        d_train = data[rnds != i]
+        # 訓練データを用いて係数ベクトルを求める
+        w = polynomial_regression(d_train, degree)
+        # テストデータのデータ行列
+        X_test = gen_data_matrix(d_test[:,0], degree)
+        # テストデータに対する予測値を計算
+        y_e = predict(w, X_test)
+        # テスト誤差を計算し配列に格納
+        errors = np.append(errors, calc_rms(y_e, d_test[:,1]))
+
+    # K通りのテスト誤差の平均を返す
+    return np.mean(errors)
+
+
+# 交差検証の結果最もテスト誤差の小さかった次数を選択する関数
+def select_best_degree(data):
+    errors = np.array([])
+
+    for i in range(1, 10):
+        errors = np.append(errors, cross_validation(data, 5, i))
+
+    # 誤差が一番小さかった次数を返す
+    return np.argmin(errors) + 1
