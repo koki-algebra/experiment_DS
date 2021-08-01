@@ -3,55 +3,46 @@ import matplotlib.pyplot as plt
 
 ### 多項式回帰に関する関数群 ###
 
-# M次多項式回帰を行い、係数ベクトルを返す関数
-def polynomial_regression(data, M):
-    # x座標のデータ
-    data_x = data[:, 0]
-    # 教師データ
-    t = data[:, 1]
-    # 行列Xを初期化
+# x座標のデータからデータ行列Xを生成する
+def gen_data_matrix(data_x, M):
     X = np.empty((0, M + 1))
 
-    # 行ベクトルxiを作り、Xに加えていく
     for i in range(len(data_x)):
         xi = np.array([])
         for j in range(M + 1):
             xi = np.append(xi, data_x[i] ** j)
         X = np.append(X, np.array([xi]), axis=0)
 
+    return X
+
+
+# 訓練データdataでM次多項式回帰を行い、係数ベクトルを返す関数
+def polynomial_regression(data, M):
+    # x座標のデータ
+    data_x = data[:, 0]
+    # 教師データ
+    t = data[:, 1]
+    # 行列Xを作成
+    X = gen_data_matrix(data_x, M)
+
     # 最小二乗法によって係数ベクトルを求める
     w = np.linalg.inv(X.T @ X) @ X.T @ t
 
+    return w
+
+# M次多項式回帰によって得られた係数ベクトルwを使って推定値y_eを返す関数
+def predict(w, X):
     # 推定値を格納したベクトル
     y_e = np.array([])
 
     # 推定値を計算
-    for i in range(len(data_x)):
+    for i in range(X.shape[0]):
         y_e = np.append(y_e, np.dot(w, X[i]))
-
+    
     return y_e
 
-# 通常の多項式回帰の結果をプロットする関数
-def poly_reg_plot(M, data_size):
-    data = np.loadtxt('data/data_{N}.csv'.format(N=data_size), delimiter=',')
 
-    x = data[:, 0]
-    y = data[:, 1]
-
-    y_e = polynomial_regression(data, M)
-
-    fig, ax = plt.subplots()
-
-    ax.scatter(x, y, label='correct answer', s=5)
-    ax.scatter(x, y_e, label='predicted', s=5)
-
-    ax.set_title('Polynomial fitting (data:{N}, degree:{M})'.format(N=data_size, M=M))
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_xlim(0, 1)
-    ax.set_ylim(-1, 1)
-    ax.grid()
-    ax.legend()
-
-    fig.savefig('img/day2/fit_data{N}_deg{M}.png'.format(N=data_size, M=M))
-    plt.show()
+# 推定値y_e(ベクトル) と 教師データt(ベクトル)の平均二乗平方根誤差(Root Mean Square)
+def calc_rms(y_e, t):
+    N = len(t)
+    return np.sqrt(np.dot((y_e - t).T, (y_e - t)) / N)

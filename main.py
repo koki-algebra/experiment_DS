@@ -1,3 +1,6 @@
+import numpy as np
+import matplotlib.pyplot as plt
 from lib import polynomial_regression as pr
+from lib import prob
 
-pr.poly_reg_plot(15, 100)
+prob.prob7_15(100)
