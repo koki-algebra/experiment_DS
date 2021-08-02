@@ -236,8 +236,6 @@ def prob7_27_28():
         L_list = np.append(L_list, (1 / np.power(10, 8)) * np.power(10, i))
     
     L = pr.select_best_lambda(data, L_list)
-    print('optimal lambda:', L)
-
 
     x = np.linspace(0, 1, 500)
     X = pr.gen_data_matrix(x, 9)
@@ -254,6 +252,7 @@ def prob7_27_28():
     ax.scatter(data_x, data_y, label='correct answer', s=10)
     ax.plot(x, y_e, label='predict', color='#ff4500')
 
+    ax.set_title('model select (degree: 9, lambda: {L})'.format(L=L))
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_xlim(0, 1)

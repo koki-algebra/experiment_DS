@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 ### 多項式回帰に関する関数群 ###
 
