@@ -31,18 +31,18 @@ def polynomial_regression(data, M):
     return w
 
 
-# 正則化多項式回帰を行う関数
-def normalize_pr(data, M, L):
+# 正則化多項式回帰を行う関数(L: 正規化パラメータλ)
+def normalize_pr(data, degree, L):
     # x座標のデータ
     data_x = data[:,0]
     # 教師データ
     t = data[:, 1]
     # データ行列Xを作成
-    X = gen_data_matrix(data_x, M)
+    X = gen_data_matrix(data_x, degree)
 
     # 最小二乗法によって係数ベクトルを求める
-    w = np.linalg.inv(X.T @ X + np.identity(M) * L) @ X.T @ t
-    return w
+    w = np.linalg.inv(X.T @ X + np.identity(degree + 1) * L) @ X.T @ t
+    return np.array(w)
 
 
 # M次多項式回帰によって得られた係数ベクトルwを使って推定値y_eを返す関数
@@ -85,8 +85,8 @@ def gen_random_nums(N, K):
     return rnds
 
 
-# K-Fold Cross Validation
-def cross_validation(data, K, degree):
+# K-Fold Cross Validation (type: 'degree' or 'lambda')
+def cross_validation(data, K, type, degree, L=0):
     data_size = data.shape[0]
     rnds = gen_random_nums(data_size, K)
 
@@ -94,9 +94,18 @@ def cross_validation(data, K, degree):
     for i in range(1, K + 1):
         # テストデータ
         d_test = data[rnds == i]
+        # 訓練データ
         d_train = data[rnds != i]
+
         # 訓練データを用いて係数ベクトルを求める
-        w = polynomial_regression(d_train, degree)
+        if type == 'degree':  # 次数に関する交差検証
+            w = polynomial_regression(d_train, degree)
+        elif type == 'lambda':  # 正則化パラメータに関する交差検証
+            w = normalize_pr(data, degree, L)
+        else:
+            print('select degree or lambda')
+            return
+
         # テストデータのデータ行列
         X_test = gen_data_matrix(d_test[:,0], degree)
         # テストデータに対する予測値を計算
@@ -113,7 +122,16 @@ def select_best_degree(data):
     errors = np.array([])
 
     for i in range(1, 10):
-        errors = np.append(errors, cross_validation(data, 5, i))
+        errors = np.append(errors, cross_validation(data, 5, 'degree', i))
 
     # 誤差が一番小さかった次数を返す
     return np.argmin(errors) + 1
+
+def select_best_lambda(data, L_list):
+    errors = np.array([])
+
+    for i in range(len(L_list)):
+        errors = np.append(errors, cross_validation(data, 5, 'lambda', 9, L_list[i]))
+    
+    # 誤差が一番小さかった正則化パラメータを返す
+    return L_list[np.argmin(errors)]
